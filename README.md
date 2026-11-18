@@ -34,6 +34,8 @@ open TriageLab.xcodeproj
 
 Pick an iPhone Simulator and press Run. Needs Xcode 16 or newer. Full steps: [docs/getting-started.md](docs/getting-started.md).
 
+**No Mac handy?** Read the [practice guide online](https://manjunathanawal.github.io/ProductionBugsLab/) or browse [all cases](docs/cases.md).
+
 ## The method in one line
 
 `TRIAGE`: **T**ell, **R**eal?, **I**solate, **A**ct, **G**uess, **E**liminate. Details: [docs/triage-method.md](docs/triage-method.md).
@@ -116,7 +118,7 @@ C02, C14, C30, C31, C32 and anything about memory-left numbers behave best on a 
 
 ## Known limits
 
-- Parts of the SwiftUI code were written without running Xcode. If the build fails for you, please open an issue with the error.
+- CI builds the project on every push. If the build fails for you (different Xcode version, say), please open an issue with the error.
 - The data race in C09 shows best under Thread Sanitizer.
 - The Bluetooth cases use a fake band. No hardware needed.
 - This is a learning tool. It is not medical software.
