@@ -1,0 +1,1416 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Triage Lab: practice guide</title>
+<style>
+:root { --bg:#fafafa; --fg:#1b1b1f; --card:#ffffff; --muted:#62626b; --line:#e3e3e8; --code:#f3f3f7; }
+@media (prefers-color-scheme: dark) { :root { --bg:#111114; --fg:#ececf1; --card:#1a1a1f; --muted:#9a9aa6; --line:#2d2d35; --code:#23232b; } }
+* { box-sizing:border-box; }
+body { margin:0; font:16px/1.55 -apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+main { max-width:1100px; margin:0 auto; padding:24px 16px 80px; }
+h1 { font-size:34px; margin:0 0 4px; }
+h2 { margin:0 0 16px; font-size:24px; border-left:8px solid var(--wc,#888); padding-left:12px; }
+h2 small { color:var(--muted); font-weight:400; font-size:14px; }
+.lead { color:var(--muted); font-size:18px; margin-bottom:20px; }
+.banner { background:linear-gradient(90deg,#3e63dd,#8e4ec6); color:#fff; border-radius:16px; padding:20px 24px; margin:16px 0 24px; }
+.banner b { font-size:20px; }
+.steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:16px 0; }
+.step { background:var(--card); border:1px solid var(--line); border-top:6px solid var(--c); border-radius:12px; padding:12px; }
+.step b { display:block; font-size:22px; color:var(--c); }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin:16px 0; }
+table { width:100%; border-collapse:collapse; }
+th,td { text-align:left; vertical-align:top; padding:8px 10px; border-bottom:1px solid var(--line); }
+th { width:230px; color:#3e63dd; }
+kbd { background:var(--code); border:1px solid var(--line); border-bottom-width:2px; border-radius:6px; padding:0 6px; font-size:13px; }
+code { background:var(--code); border-radius:5px; padding:1px 5px; font-size:.92em; }
+pre { background:var(--code); border-radius:10px; padding:12px; overflow-x:auto; }
+pre code { background:none; padding:0; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { text-decoration:none; color:var(--fg); background:var(--card); border:1px solid var(--line); border-left:6px solid var(--wc); border-radius:10px; padding:4px 10px; font-size:14px; }
+.chip.solved { opacity:.55; text-decoration:line-through; }
+.ward { margin:40px 0; }
+.case { background:var(--card); border:1px solid var(--line); border-top:6px solid var(--wc); border-radius:14px; padding:16px 18px; margin:20px 0; }
+.case header { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.case h3 { margin:0; font-size:20px; flex:1; }
+.cid { background:var(--wc); color:#fff; border-radius:8px; padding:2px 10px; font-weight:700; }
+.sev { border-radius:20px; padding:2px 10px; font-size:12px; font-weight:700; color:#fff; }
+.sev.critical { background:#e5484d; } .sev.high { background:#f76b15; } .sev.medium { background:#b58900; } .sev.low { background:#7d7d89; }
+.done { font-size:14px; color:var(--muted); }
+.report { background:color-mix(in srgb, var(--wc) 12%, transparent); border-radius:10px; padding:10px 12px; margin:12px 0; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+@media (max-width:800px) { .grid { grid-template-columns:1fr; } }
+h4 { margin:14px 0 6px; color:var(--wc); }
+.tools { display:flex; flex-wrap:wrap; gap:6px; }
+.tool { background:#e8efff; color:#1d3a99; border-radius:20px; padding:2px 10px; font-size:13px; }
+.file { background:var(--code); border-radius:6px; padding:2px 8px; font:12px ui-monospace,monospace; }
+@media (prefers-color-scheme: dark) { .tool { background:#22305f; color:#cfdaff; } }
+details { margin:6px 0; }
+summary { cursor:pointer; font-weight:600; }
+.hint summary { background:#fff4d6; color:#6b4b00; border-radius:8px; padding:6px 10px; }
+@media (prefers-color-scheme: dark) { .hint summary { background:#3a3010; color:#ffe9a8; } }
+.answer > summary { background:#e9f7ee; color:#116b3a; border-radius:10px; padding:10px 14px; margin-top:14px; }
+@media (prefers-color-scheme: dark) { .answer > summary { background:#12301f; color:#9be3b9; } }
+.ans { border-left:6px solid; border-radius:8px; padding:6px 14px; margin:10px 0; background:var(--bg); }
+.ans h5 { margin:6px 0; font-size:15px; }
+.cause { border-color:#e5484d; } .cause h5 { color:#e5484d; }
+.confirm { border-color:#2b8be4; } .confirm h5 { color:#2b8be4; }
+.fix { border-color:#30a46c; } .fix h5 { color:#30a46c; }
+.prevent { border-color:#8e4ec6; } .prevent h5 { color:#8e4ec6; }
+.say { border-color:#f76b15; } .say h5 { color:#f76b15; }
+.ref { color:var(--muted); font-size:14px; }
+#progress { position:sticky; top:0; background:var(--bg); padding:8px 0; z-index:5; font-weight:700; }
+</style></head>
+<body><main>
+<h1>Triage Lab</h1>
+<div class="lead">33 real bugs in one Xcode project. Find each root cause with Xcode tools. Then check your answer.</div>
+
+<div class="banner"><b>The loop you practice on every case</b><br>
+Read the report, reproduce it, read the black-box log, pick a tool, find the root cause, PROVE it, fix it, say it out loud.</div>
+
+<div class="steps">
+ <div class="step" style="--c:#e5484d"><b>T</b>Tell: who, how many, since when?</div>
+ <div class="step" style="--c:#f76b15"><b>R</b>Real? Is the number right?</div>
+ <div class="step" style="--c:#e5a000"><b>I</b>Isolate: which group, screen, switch?</div>
+ <div class="step" style="--c:#30a46c"><b>A</b>Act: stop the damage</div>
+ <div class="step" style="--c:#2b8be4"><b>G</b>Guess, then reproduce</div>
+ <div class="step" style="--c:#8e4ec6"><b>E</b>Eliminate: fix, test, prove, prevent</div>
+</div>
+
+<div class="card"><h2 style="--wc:#3e63dd">Set up in 3 minutes</h2>
+<ol>
+<li>Unzip. Open <code>TriageLab.xcodeproj</code> in Xcode 16 or newer.</li>
+<li>Pick an iPhone Simulator. Press <kbd>⌘R</kbd>. Tap a case.</li>
+<li>For the cases marked <b>real phone</b> (C02, C14, C31, C32, C30) use an iPhone. Set your Team in Signing.</li>
+<li>Do not read the Swift files first. Read the report, trigger the bug, then investigate. Hints are in the app and here.</li>
+<li>If a build error appears, open an issue with the error text. Parts of this project were written without running Xcode.</li>
+</ol></div>
+
+<div class="card"><h2 style="--wc:#30a46c">Where to click in Xcode (your tools map)</h2><table><tr><th>Run the app</th><td>Press <kbd>⌘R</kbd>. Pick an iPhone Simulator. For memory-left, MetricKit and background tasks use a real iPhone.</td></tr><tr><th>Debug bar (bottom of Xcode)</th><td>Pause/Continue, <b>Debug Memory Graph</b> (three connected circles), View Hierarchy, <b>Environment Overrides</b> (text size, dark mode).</td></tr><tr><th>Gauges</th><td><kbd>⌘7</kbd> opens the Debug Navigator. Click <b>CPU</b>, <b>Memory</b>, <b>Disk</b>, <b>Network</b>, <b>Energy</b>. Watch them while you trigger a case.</td></tr><tr><th>Pause and read the stack</th><td>Menu <b>Debug &gt; Pause</b> (<kbd>⌃⌘Y</kbd>). In the Debug Navigator click <b>Thread 1 (main)</b>. Is it running code or waiting?</td></tr><tr><th>Breakpoints</th><td><kbd>⌘8</kbd> Breakpoint Navigator. Click <b>+</b> at the bottom: <b>Exception Breakpoint</b> or <b>Symbolic Breakpoint</b>. Click a line number gutter for a normal one.</td></tr><tr><th>Instruments</th><td>Menu <b>Product &gt; Profile</b> (<kbd>⌘I</kbd>). Templates: <b>Time Profiler</b>, <b>Allocations</b>, <b>Leaks</b>, <b>Animation Hitches</b>, <b>SwiftUI</b>, <b>Energy Log</b>, <b>File Activity</b>, <b>App Launch</b>.</td></tr><tr><th>Scheme diagnostics</th><td><b>Product &gt; Scheme &gt; Edit Scheme &gt; Run &gt; Diagnostics</b>: <b>Main Thread Checker</b>, <b>Thread Sanitizer</b>, <b>Address Sanitizer</b> (not together with Thread Sanitizer), <b>Zombie Objects</b>, <b>Malloc Stack Logging</b>.</td></tr><tr><th>Launch arguments and language</th><td><b>Edit Scheme &gt; Run &gt; Arguments</b>: add <code>-resetLabConfig</code> or <code>-fixSlowLaunch</code>. <b>Options &gt; App Language</b>: Right to Left and Double-Length pseudolanguages.</td></tr><tr><th>Device logs and files</th><td><b>Window &gt; Devices and Simulators</b> &gt; select the device: <b>Open Console</b>, <b>View Device Logs</b> (crash logs), gear icon on the app &gt; <b>Download Container</b> (see the files the app wrote).</td></tr><tr><th>Mac Console app</th><td>Plug in the iPhone. Open Console. Select the device. Filter by <code>TriageLab</code> or a category like <code>network</code>.</td></tr><tr><th>Accessibility Inspector</th><td>Menu <b>Xcode &gt; Open Developer Tool &gt; Accessibility Inspector</b>. Choose the Simulator. Press <b>Audit</b>.</td></tr><tr><th>MetricKit</th><td>App on a real device. Menu <b>Debug &gt; Simulate MetricKit Payloads</b>. Then open the app's Black Box screen to see the files.</td></tr><tr><th>Organizer</th><td><b>Window &gt; Organizer</b>: Crashes and Terminations for App Store and TestFlight builds.</td></tr><tr><th>Terminal tools</th><td><code>dwarfdump --uuid X.dSYM</code> shows the UUID. <code>atos</code> turns an address into a function name.</td></tr><tr><th>In-app tools</th><td>Top-right <b>Console</b>: the black-box log, readable, with a filter box. Top-left <b>Black Box</b>: last-run report, live memory numbers, MetricKit files.</td></tr></table></div>
+
+<div class="card"><h2 style="--wc:#e5484d">Tool did not work? Quick fixes</h2><table>
+<tr><th>Memory Graph error: "failed to create a VMUTaskMemoryScanner ... libmalloc hasn't been initialized"</th><td>
+<ol><li>Edit Scheme &gt; Run &gt; Diagnostics: turn OFF <b>Thread Sanitizer</b>, <b>Address Sanitizer</b> and <b>Guard Malloc</b>. Memory Graph does not work with them. Run again.</li>
+<li>Wait until the first screen shows. Do not capture at a launch breakpoint.</li>
+<li>Capture BEFORE you trigger a freeze (C12, C13).</li>
+<li>Stop, Clean Build Folder (<kbd>⇧⌘K</kbd>), quit the Simulator, run again.</li>
+<li>Still failing? Use <b>Black Box &gt; Live objects</b> in the app (no Xcode tool needed), the in-app Console (count init and deinit lines), or Instruments Allocations.</li></ol></td></tr>
+<tr><th>Instruments Leaks: "Unable to instantiate loader for target"</th><td>The heap tools cannot attach. Update Xcode so it matches your iOS version. Try another Simulator or re-download its runtime (Xcode &gt; Settings &gt; Components). On a phone, turn on Developer Mode and reconnect. Try <b>Allocations</b> instead of Leaks. Only C01, C02 and C03 need heap tools.</td></tr>
+<tr><th>Thread Sanitizer shows nothing</th><td>Edit Scheme &gt; Run &gt; Diagnostics &gt; tick Thread Sanitizer. Do not tick Address Sanitizer at the same time. Run the case several times.</td></tr>
+<tr><th>Pause shows no useful stack</th><td>Click <b>Thread 1 (main)</b> in the Debug Navigator. Look for the first line with the app name.</td></tr>
+<tr><th>Memory left shows n/a</th><td>You are on the Simulator. Use a real iPhone.</td></tr>
+<tr><th>Console is empty</th><td>Tap Refresh. Clear the filter box. Logs are written a moment after the event.</td></tr>
+<tr><th>Instruments cannot attach</th><td>Product &gt; Profile again. Pick a real device or the Simulator that is running the app. Stop the debug session first.</td></tr>
+</table></div>
+
+<div class="card"><h2 style="--wc:#8e4ec6">Three questions for EVERY case</h2>
+<ol><li><b>What do I see?</b> (symptom, thread, CPU, memory, log lines)</li>
+<li><b>Which tool shows the cause?</b> (stack, graph, profiler, sanitizer, log)</li>
+<li><b>How do I PROVE it?</b> (a number or line that changes after the fix)</li></ol></div>
+
+<div id="progress">Solved: <span id="count">0</span> / 33</div>
+<div class="card"><h2 style="--wc:#2b8be4">All cases</h2><div class="chips" id="chips"><a class="chip" style="--wc:#e5484d" href="#C01"><b>C01</b> Memory climbs on the vitals screen</a><a class="chip" style="--wc:#e5484d" href="#C02"><b>C02</b> App closes on the photo gallery</a><a class="chip" style="--wc:#e5484d" href="#C03"><b>C03</b> Memory grows all day on the live feed</a><a class="chip" style="--wc:#f76b15" href="#C04"><b>C04</b> Crash opening one patient</a><a class="chip" style="--wc:#f76b15" href="#C05"><b>C05</b> Crash on the third page</a><a class="chip" style="--wc:#f76b15" href="#C06"><b>C06</b> Crash after going back quickly</a><a class="chip" style="--wc:#f76b15" href="#C07"><b>C07</b> Crash when syncing in a lift</a><a class="chip" style="--wc:#f76b15" href="#C08"><b>C08</b> Purple warning: publishing from background</a><a class="chip" style="--wc:#f76b15" href="#C09"><b>C09</b> Wrong count, sometimes a crash</a><a class="chip" style="--wc:#f76b15" href="#C10"><b>C10</b> Crash: incorrect actor executor</a><a class="chip" style="--wc:#f76b15" href="#C11"><b>C11</b> Crash at every launch after a download</a><a class="chip" style="--wc:#e5a000" href="#C12"><b>C12</b> App freezes forever</a><a class="chip" style="--wc:#e5a000" href="#C13"><b>C13</b> Freeze for a few seconds, CPU high</a><a class="chip" style="--wc:#e5a000" href="#C14"><b>C14</b> First screen takes 10 seconds</a><a class="chip" style="--wc:#e5a000" href="#C15"><b>C15</b> List stutters while scrolling</a><a class="chip" style="--wc:#e5a000" href="#C16"><b>C16</b> Expanded rows close by themselves</a><a class="chip" style="--wc:#2b8be4" href="#C17"><b>C17</b> Outage: server flooded by retries</a><a class="chip" style="--wc:#2b8be4" href="#C18"><b>C18</b> Patient got two refill orders</a><a class="chip" style="--wc:#2b8be4" href="#C19"><b>C19</b> Users logged out at random</a><a class="chip" style="--wc:#2b8be4" href="#C20"><b>C20</b> Dashboard shows heart rate 0 after update</a><a class="chip" style="--wc:#12a594" href="#C21"><b>C21</b> Nurse note vanishes after app ends</a><a class="chip" style="--wc:#12a594" href="#C22"><b>C22</b> Negative minutes around the clock change</a><a class="chip" style="--wc:#12a594" href="#C23"><b>C23</b> Walk distance shows thousands of km</a><a class="chip" style="--wc:#8e4ec6" href="#C24"><b>C24</b> Balance went negative</a><a class="chip" style="--wc:#8e4ec6" href="#C25"><b>C25</b> Uploads stop at scan 3</a><a class="chip" style="--wc:#3e63dd" href="#C26"><b>C26</b> Band found but never connects</a><a class="chip" style="--wc:#3e63dd" href="#C27"><b>C27</b> Heart rate frozen but &#x27;Connected&#x27;</a><a class="chip" style="--wc:#d6409f" href="#C28"><b>C28</b> Accessibility audit fails</a><a class="chip" style="--wc:#d6409f" href="#C29"><b>C29</b> Wrong arrows and raw keys in Arabic</a><a class="chip" style="--wc:#30a46c" href="#C30"><b>C30</b> Crash log with only hex addresses</a><a class="chip" style="--wc:#30a46c" href="#C31"><b>C31</b> Silent kill on an iPhone 11</a><a class="chip" style="--wc:#30a46c" href="#C32"><b>C32</b> Nightly sync is &#x27;scheduled&#x27; but never runs</a><a class="chip" style="--wc:#30a46c" href="#C33"><b>C33</b> Battery drain and a warm phone</a></div></div>
+
+<section class="ward" id="ward-memory" style="--wc:#e5484d"><h2>Ward 1: Memory and silent kills <small>3 cases</small></h2>
+<article class="case" id="C01" style="--wc:#e5484d">
+  <header>
+    <span class="cid">C01</span>
+    <h3>Memory climbs on the vitals screen</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C01"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Nurses say the app gets slower and warmer each time they check vitals. Memory keeps climbing.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Open the Vitals monitor, go back. Repeat 5 times.</li><li>Watch the memory number on the screen and in Xcode (Debug Navigator, Memory).</li><li>No heap tool? Open Black Box &gt; Live objects. Count VitalsMonitor.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Memory gauge</span><span class="tool">Debug Memory Graph button</span><span class="tool">Instruments: Allocations or Leaks</span><span class="tool">Black Box &gt; Live objects (works without any tool)</span><span class="tool">Console log (init / deinit lines)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L01_VitalsMonitor.swift</span><span class="file">CaseViews/W1_Memory.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Use the Memory gauge, then press the Debug Memory Graph button (three connected circles) in the debug bar.</p></details><details class="hint"><summary>Hint 2</summary><p>In the memory graph filter for VitalsMonitor. Count them. In the Console search the log for &#x27;VitalsMonitor&#x27;.</p></details><details class="hint"><summary>Hint 3</summary><p>Something keeps each monitor alive after you leave the screen. Look at the timer and what its closure captures.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>A repeating Timer keeps its closure. The closure captures <code>self</code> strongly. The timer is never stopped.</li><li>The run loop holds the timer. The timer holds the closure. The closure holds the monitor. So the monitor never leaves memory.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Black Box &gt; Live objects: <code>VitalsMonitor: 5 alive</code> after 5 visits. It should be 0 or 1.</li><li>Console: filter <code>VitalsMonitor</code>. You see 5 <code>init</code> lines and 0 <code>deinit</code> lines.</li><li>Debug Memory Graph: 5 VitalsMonitor objects. Click one. The arrows lead to a Timer and a closure.</li><li>Memory gauge grows about 400 KB per second for every leaked monitor.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+    guard let self else { return }
+    self.chartBuffers.append(Data(repeating: 1, count: 200_000))
+    self.onTick?()
+}
+
+func stop() {
+    timer?.invalidate()
+    timer = nil
+}
+// call monitor.stop() from .onDisappear</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Log <code>deinit</code> for long-lived objects.</li><li>Stop timers and tasks when the screen goes away.</li><li>Run the Leaks instrument before release.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>I filtered the memory graph for the type, saw 5 leaked instances, and followed the arrows to a timer closure that captured self strongly.</p></div>
+  </details>
+</article>
+<article class="case" id="C02" style="--wc:#e5484d">
+  <header>
+    <span class="cid">C02</span>
+    <h3>App closes on the photo gallery</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C02"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Nurses on older iPhones say the app closes by itself when they open the scan gallery. Our crash tool shows nothing.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Set Photos to 8, tap Load photos. Watch memory.</li><li>Raise to 24 and load again. On a real iPhone iOS will close the app. Reopen it and open the Black Box screen.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Memory gauge</span><span class="tool">Instruments: Allocations + VM Tracker</span><span class="tool">Black Box: last-run report</span><span class="tool">Xcode Organizer &gt; Terminations (real apps)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L02_PhotoLoader.swift</span><span class="file">CaseViews/W1_Memory.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>There is no crash report. Think: who else can close an app? Check the Black Box screen after the app closes.</p></details><details class="hint"><summary>Hint 2</summary><p>Look at how many photos are held in memory at once and how big each one is (4032 x 3024 pixels, 4 bytes per pixel).</p></details><details class="hint"><summary>Hint 3</summary><p>Every photo is decoded at full size and all are kept in an array. 24 photos is more than 1 GB.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Each photo is decoded at full size: 4032 x 3024 x 4 bytes is about 48.8 MB.</li><li>All photos are kept at once. 24 photos is about 1.1 GB. iOS closes the app when it passes its memory limit. No crash report is made.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Memory gauge jumps by about 49 MB per photo.</li><li>Instruments &gt; Allocations: big <code>[UInt8]</code> buffers. VM Tracker shows dirty memory growing.</li><li>Real phone: after the kill, Black Box says <code>unknown_in_foreground</code> with the last memory numbers. The log has <code>silent_end_suspected</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// Do not decode full size. Make a small thumbnail with ImageIO.
+let options: [CFString: Any] = [
+    kCGImageSourceCreateThumbnailFromImageAlways: true,
+    kCGImageSourceThumbnailMaxPixelSize: 600,
+    kCGImageSourceCreateThumbnailWithTransform: true
+]
+let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+// Keep only the visible photos. Load 2 or 3 at a time.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Check memory left before heavy work.</li><li>Test with 50 photos on the oldest phone.</li><li>Alert on <code>unknown_in_foreground</code> per app version.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>No crash report means iOS closed it. I read the last-run log, did the memory math (48 MB per decoded photo), and fixed it by downsampling.</p></div>
+  </details>
+</article>
+<article class="case" id="C03" style="--wc:#e5484d">
+  <header>
+    <span class="cid">C03</span>
+    <h3>Memory grows all day on the live feed</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C03"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Charge nurses keep the live feed open all shift. After a few hours the app closes.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Refresh live feed 20 times. Watch the memory numbers go up in steps.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Memory gauge</span><span class="tool">Instruments: Allocations (Mark Generation)</span><span class="tool">VM Tracker</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L03_FeedCache.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>The curve looks like a staircase. Something grows with every refresh and never shrinks.</p></details><details class="hint"><summary>Hint 2</summary><p>In Allocations press Mark Generation, tap Refresh 5 times, press it again. See what survived.</p></details><details class="hint"><summary>Hint 3</summary><p>Look at how FeedCache stores items and what key it uses.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Each refresh saves 3 MB under a new key (the key has the time in it). Nothing is ever removed.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Allocations &gt; Generations: each refresh adds about 3 MB that stays alive.</li><li>Memory gauge is a staircase.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>private let cache = NSCache&lt;NSString, NSData&gt;()
+
+init() {
+    cache.countLimit = 20
+    cache.totalCostLimit = 30_000_000
+}
+
+func save(_ data: Data, for key: String) {
+    cache.setObject(data as NSData, forKey: key as NSString, cost: data.count)
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Every cache needs a size limit.</li><li>Clear caches on memory warning and when the app goes to background.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A staircase memory curve points to an unbounded cache. I used Mark Generation to see what survives each refresh.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-crashes" style="--wc:#f76b15"><h2>Ward 2: Crashes <small>8 cases</small></h2>
+<article class="case" id="C04" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C04</span>
+    <h3>Crash opening one patient</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C04"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Crash when a nurse opens patient C. Das. Other patients are fine.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap patients A. Rao and B. Singh. Then tap C. Das.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode debugger stop + Debug Navigator stack</span><span class="tool">Exception breakpoint</span><span class="tool">Console</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L04_Patients.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Run from Xcode. It stops on a line. Read the stack in the Debug Navigator.</p></details><details class="hint"><summary>Hint 2</summary><p>Compare the data of patient 3 with patients 1 and 2 (PatientService has the JSON).</p></details><details class="hint"><summary>Hint 3</summary><p>A field is missing for one patient and the code uses <code>!</code>.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Patient 3 has no <code>doctor</code>. The model says <code>doctor</code> is optional, which is correct.</li><li>The code does <code>record.doctor!.name</code>. A force unwrap of nil traps.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Xcode stops on <code>record.doctor!.name</code>. Console says: Unexpectedly found nil while unwrapping an Optional value.</li><li>Print the record: doctor is nil.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func doctorName(forPatient id: Int) -&gt; String {
+    guard let record = records.first(where: { $0.id == id }) else {
+        return &quot;Unknown patient&quot;
+    }
+    guard let doctor = record.doctor else {
+        Log.error(.data, &quot;doctor_missing&quot;, [&quot;patient&quot;: String(id)])
+        return &quot;Not assigned&quot;
+    }
+    return doctor.name
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>No <code>!</code> on data that comes from outside the app.</li><li>Test with missing, null and extra fields.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Nil force unwrap. The server left a field out. I used guard-let, logged it, and showed a clear fallback.</p></div>
+  </details>
+</article>
+<article class="case" id="C05" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C05</span>
+    <h3>Crash on the third page</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C05"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Crash when a nurse taps Next page for the third time.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Next page twice.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode stack trace</span><span class="tool">Breakpoint on <code>page(_:)</code></span><span class="tool">Console</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L05_Pager.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Read the crashed line and the error message.</p></details><details class="hint"><summary>Hint 2</summary><p>Print <code>start</code> and <code>end</code> for each page. There are 25 readings.</p></details><details class="hint"><summary>Hint 3</summary><p>Page 3 asks for items 20 to 29. The list stops at 24.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>start..&lt;end</code> goes past the end of the array on the last page (20..&lt;30 with 25 items).</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Xcode stops at <code>Array(readings[start..&lt;end])</code>. Error: Index out of range.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func page(_ number: Int) -&gt; [String] {
+    let start = number * pageSize
+    guard start &lt; readings.count else { return [] }
+    let end = min(start + pageSize, readings.count)
+    return Array(readings[start..&lt;end])
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Unit test the last page and an empty page.</li><li>Never trust a computed index.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Off-by-one at the last page. I clamped the end index and added a unit test for the edge.</p></div>
+  </details>
+</article>
+<article class="case" id="C06" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C06</span>
+    <h3>Crash after going back quickly</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C06"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Crash a few seconds after a nurse opens the lab result and goes back.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Open lab result. Tap Load. Go back within 3 seconds. Wait.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode stack trace</span><span class="tool">Console message</span><span class="tool">Log (slow_load_start / slow_load_done)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L06_SlowLoader.swift</span><span class="file">CaseViews/W2_Crashes.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Read the error message in the console. It names the problem.</p></details><details class="hint"><summary>Hint 2</summary><p>Which object is gone when the closure runs? Look at the capture list.</p></details><details class="hint"><summary>Hint 3</summary><p><code>[unowned self]</code> plus a delayed closure plus a screen that closed.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The closure waits 3 seconds. It captures <code>self</code> as <code>unowned</code>.</li><li>The screen closed, so the loader was freed. When the closure runs, <code>self</code> is gone and the app traps.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Console: Attempted to read an unowned reference but object was already deallocated.</li><li>Log has <code>slow_load_start</code> but no <code>slow_load_done</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+    guard let self else { return }
+    self.result = &quot;loaded&quot;
+    self.onDone?()
+}
+// or cancel the work in deinit</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Use <code>weak</code> for work that can outlive the screen.</li><li>Cancel pending work when the screen goes away.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A delayed closure used unowned self and the screen was gone. Fix: weak self with a guard, and cancel the work.</p></div>
+  </details>
+</article>
+<article class="case" id="C07" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C07</span>
+    <h3>Crash when syncing in a lift</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C07"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Nurses report a crash when syncing favorites in lifts and tunnels.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Turn on Poor network. Tap Sync favorites. Wait 3 seconds.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode stack trace (which thread?)</span><span class="tool">Console log</span><span class="tool">Network Link Conditioner (idea)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L07_SyncService.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Check which thread crashed. Read the message.</p></details><details class="hint"><summary>Hint 2</summary><p>How long does the code wait? How long can a poor network take?</p></details><details class="hint"><summary>Hint 3</summary><p>The code treats a slow network as a bug.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The code waits at most 3 seconds, then calls <code>fatalError</code>.</li><li>A slow network is normal. The timeout is not a bug.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Crash is on a background thread. Message: Sync took too long.</li><li>Log shows <code>sync_start</code> with network_delay_s=5 and no <code>sync_ok</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func syncFavorites(simulatedNetworkDelay: Double, completion: @escaping (Bool) -&gt; Void) {
+    // Never wait on a thread. Use a completion and a longer timeout.
+    DispatchQueue.global().asyncAfter(deadline: .now() + simulatedNetworkDelay) {
+        completion(true)
+    }
+}
+// On timeout: call completion(false) and show &#x27;Will retry later&#x27;.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li><code>fatalError</code> is for bugs, not for slow networks.</li><li>Test with Network Link Conditioner.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A timeout turned into fatalError. I handled the timeout, gave slow networks more time, and showed a retry message.</p></div>
+  </details>
+</article>
+<article class="case" id="C08" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C08</span>
+    <h3>Purple warning: publishing from background</h3>
+    <span class="sev low">LOW</span>
+    <label class="done"><input type="checkbox" data-case="C08"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Developers see a purple warning in Xcode. Sometimes the screen does not update.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Scan. Open the Issue Navigator (triangle icon) and the console.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Issue Navigator (Runtime Issues)</span><span class="tool">Main Thread Checker (Edit Scheme &gt; Run &gt; Diagnostics)</span><span class="tool">Console</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">CaseViews/W2_Crashes.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Open the Issue Navigator. Look for a purple item.</p></details><details class="hint"><summary>Hint 2</summary><p>Which thread changes <code>status</code>?</p></details><details class="hint"><summary>Hint 3</summary><p><code>@Published</code> must change on the main thread.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>status</code> is changed inside <code>DispatchQueue.global().async</code>. UI state must change on the main thread.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Issue Navigator: Publishing changes from background threads is not allowed.</li><li>Turn on Main Thread Checker for stricter reports.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>@MainActor
+final class ScanViewModel: ObservableObject {
+    @Published var status = &quot;idle&quot;
+
+    func scan() {
+        status = &quot;scanning&quot;
+        Task {
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            status = &quot;done&quot;
+        }
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Mark view models <code>@MainActor</code>.</li><li>Keep Main Thread Checker on in debug.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>UI state changed off the main thread. I made the view model @MainActor and used async work.</p></div>
+  </details>
+</article>
+<article class="case" id="C09" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C09</span>
+    <h3>Wrong count, sometimes a crash</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C09"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The reading count is sometimes lower than expected. Rarely the app crashes with a malloc error.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Collect readings several times. Compare Expected and Got.</li><li>Then turn on Thread Sanitizer and run again.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Thread Sanitizer (Edit Scheme &gt; Run &gt; Diagnostics)</span><span class="tool">Console</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L09_ReadingBuffer.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Turn on Thread Sanitizer and run again.</p></details><details class="hint"><summary>Hint 2</summary><p>How many threads add to the same array?</p></details><details class="hint"><summary>Hint 3</summary><p>An array is not safe for many writers.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>concurrentPerform</code> runs many threads. They all call <code>values.append</code> on one array without a lock. This is a data race.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Thread Sanitizer: Data race detected (Issue Navigator). Two threads write the same address. It reports this on every run.</li><li>Without the Sanitizer the count may look right on some runs. On a Mac with many cores it is often lower, and sometimes the app crashes. A race does not fail every time. That is why it is dangerous.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>final class ReadingBuffer {
+    private let queue = DispatchQueue(label: &quot;readings&quot;)
+    private var values: [Int] = []
+
+    func add(_ value: Int) {
+        queue.sync {
+            values.append(value)
+        }
+    }
+
+    var count: Int {
+        queue.sync {
+            values.count
+        }
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>One owner for shared data: a lock, a serial queue, or an actor.</li><li>Run Thread Sanitizer in CI.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Random wrong counts and malloc crashes mean a data race. Thread Sanitizer pointed at the array. I gave the data one owner.</p></div>
+  </details>
+</article>
+<article class="case" id="C10" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C10</span>
+    <h3>Crash: incorrect actor executor</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C10"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Crash after refreshing from the bedside device. Message mentions an actor executor.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Refresh from device.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode stack trace</span><span class="tool">Console message</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L10_Bedside.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Read the message. It says which executor was expected.</p></details><details class="hint"><summary>Hint 2</summary><p>Which thread runs the callback of the old device API?</p></details><details class="hint"><summary>Hint 3</summary><p><code>MainActor.assumeIsolated</code> does not move you to the main thread. It only checks.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The old API calls back on a background queue.</li><li>The code uses <code>MainActor.assumeIsolated</code>. It promises &#x27;I am on main&#x27;. The promise is false, so the app traps.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Console: Incorrect actor executor assumption. The stack shows the background queue.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>LegacyDeviceApi.fetch {
+    Task { @MainActor in
+        model.markUpdated()
+        onDone()
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Do not use <code>assumeIsolated</code> as a shortcut.</li><li>Fix the caller. Hop to the main actor properly.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>assumeIsolated is a check, not a hop. The callback was on a background queue. I used a MainActor task.</p></div>
+  </details>
+</article>
+<article class="case" id="C11" style="--wc:#f76b15">
+  <header>
+    <span class="cid">C11</span>
+    <h3>Crash at every launch after a download</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C11"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> After tapping &#x27;Download new config&#x27;, the app crashes at every launch. Reinstall fixes it.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Download new config. Stop the app in Xcode. Run again.</li><li>To recover: Edit Scheme &gt; Run &gt; Arguments &gt; add -resetLabConfig.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode stack trace at launch</span><span class="tool">Console</span><span class="tool">Window &gt; Devices and Simulators &gt; Download Container</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L11_ConfigStore.swift</span><span class="file">App/AppBootstrap.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>The crash is before any screen. Read the stack and the message.</p></details><details class="hint"><summary>Hint 2</summary><p>What does the app read at launch? Find the file. Download the container and open it.</p></details><details class="hint"><summary>Hint 3</summary><p>The settings file has a wrong value type and the code uses <code>try!</code>.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The server wrote <code>&quot;refreshSeconds&quot;: &quot;fast&quot;</code> (text, not a number).</li><li><code>ConfigStore.load()</code> uses <code>try!</code>. It crashes on every launch, so the app cannot start. This is a crash loop.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Xcode: Fatal error: &#x27;try!&#x27; expression unexpectedly raised an error: typeMismatch(Int...).</li><li>Device container &gt; Library/Caches/lab-config.json shows the bad value.</li><li>Black Box (after recovery): last run is <code>unknown_in_foreground</code> several times in a row.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>static func load() -&gt; LabConfig {
+    guard let data = try? Data(contentsOf: url) else { return .defaults }
+    do {
+        return try JSONDecoder().decode(LabConfig.self, from: data)
+    } catch {
+        Log.error(.lifecycle, &quot;config_bad_deleted&quot;)
+        try? FileManager.default.removeItem(at: url)   // delete the bad file
+        return .defaults
+    }
+}
+// Also: crash loop breaker. After 3 bad launches in a row start in safe mode.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Never <code>try!</code> on data from disk or network.</li><li>Safe defaults. Crash loop breaker.</li><li>Validate config before saving it.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A crash at launch every time: bad config on disk plus try!. I read the file from the device container, fixed the decode with safe defaults, and added a crash loop breaker.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-hangs" style="--wc:#e5a000"><h2>Ward 3: Hangs, launch, speed <small>5 cases</small></h2>
+<article class="case" id="C12" style="--wc:#e5a000">
+  <header>
+    <span class="cid">C12</span>
+    <h3>App freezes forever</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C12"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The app freezes completely when building the daily report. No crash.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Build report. The app freezes. In Xcode use Debug &gt; Pause (or the pause button).</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Pause + Debug Navigator main thread stack</span><span class="tool">Console (main_thread_hang)</span><span class="tool">Instruments: Hangs</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L12_ReportBuilder.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Pause the app and read what the main thread is doing.</p></details><details class="hint"><summary>Hint 2</summary><p>Is the CPU high or low? A frozen app with low CPU is waiting.</p></details><details class="hint"><summary>Hint 3</summary><p>The main thread waits for a result. The worker needs the main thread to deliver it.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>buildReport()</code> runs on the main thread and calls <code>semaphore.wait()</code>.</li><li>The worker thread sends the result with <code>DispatchQueue.main.async</code>. The main thread is blocked, so that block never runs. Deadlock.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Pause: main thread is in <code>semaphore_wait_trap</code>. CPU is near 0%.</li><li>Console: <code>main_thread_hang</code> from the live hang detector.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func buildReport(completion: @escaping (String) -&gt; Void) {
+    DispatchQueue.global().async {
+        let text = self.collectNumbers()
+        DispatchQueue.main.async {
+            completion(text)
+        }
+    }
+}
+// The caller shows a spinner and updates when the completion runs.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Never wait for another thread on the main thread.</li><li>Main Thread Checker and a hang detector in debug.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Low CPU freeze means waiting, not working. I paused the app and saw the main thread blocked on a semaphore while the worker needed main.</p></div>
+  </details>
+</article>
+<article class="case" id="C13" style="--wc:#e5a000">
+  <header>
+    <span class="cid">C13</span>
+    <h3>Freeze for a few seconds, CPU high</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C13"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The app freezes for several seconds when building the summary. The phone gets warm.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Build daily summary. Try to scroll or tap during the freeze.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode CPU gauge</span><span class="tool">Instruments: Time Profiler</span><span class="tool">Console (main_thread_hang)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L13_Sorter.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Is the CPU high or low? Compare with the previous case.</p></details><details class="hint"><summary>Hint 2</summary><p>Profile with Time Profiler (Product &gt; Profile). Look at the heaviest function.</p></details><details class="hint"><summary>Hint 3</summary><p>A lot of sorting runs on the main thread.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Eight sorts of 1,000,000 numbers run on the main thread. The main thread is busy, not waiting.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Time Profiler: <code>ReadingSorter.buildSummary</code> and <code>sort</code> at the top. Main thread 100% busy.</li><li>Hang detector logs main_thread_hang.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>Button(&quot;Build daily summary&quot;) {
+    isWorking = true
+    Task.detached {
+        let total = ReadingSorter.buildSummary()
+        await MainActor.run {
+            message = &quot;Summary ready: \(total)&quot;
+            isWorking = false
+        }
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Heavy work goes off the main thread, with a spinner.</li><li>Profile with Time Profiler before release.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>High CPU: the main thread was busy. Time Profiler showed the sort at the top. I moved it off main.</p></div>
+  </details>
+</article>
+<article class="case" id="C14" style="--wc:#e5a000">
+  <header>
+    <span class="cid">C14</span>
+    <h3>First screen takes 10 seconds</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C14"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> After enabling Slow start-up, the first screen takes more than 10 seconds. On real phones iOS closes the app at launch.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Turn on Slow start-up. Stop. Run again and time the first screen.</li><li>To recover: Edit Scheme &gt; Run &gt; Arguments &gt; add -fixSlowLaunch.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console (startup_config_fetch_begin / end, time_to_first_screen)</span><span class="tool">Xcode Pause during launch</span><span class="tool">Instruments: App Launch</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L14_LaunchWork.swift</span><span class="file">App/AppBootstrap.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Read the launch lines in the Console. Where is the time lost?</p></details><details class="hint"><summary>Hint 2</summary><p>Pause during the freeze. What is the main thread doing?</p></details><details class="hint"><summary>Hint 3</summary><p>Something waits for a &#x27;server&#x27; before the first screen.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Start-up code waits on a semaphore for a fake server reply, on the main thread, before the first screen.</li><li>On a real phone the watchdog kills the app (about 20 seconds). It is not enforced in the Simulator or with the debugger.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Console: <code>time_to_first_screen</code> is more than 10000 ms.</li><li>Pause: main thread in <code>semaphore_wait</code>, called from <code>AppBootstrap.start</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// 1. Show the first screen first.
+// 2. Load config later, with a short timeout and a cached default.
+Task {
+    let config = await ConfigLoader.loadWithTimeout(seconds: 3)
+    apply(config)
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Launch never waits for the network.</li><li>Budget for time to first screen in CI.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Launch waited on the network. I showed the first screen first, loaded config later with a timeout, and used cached defaults.</p></div>
+  </details>
+</article>
+<article class="case" id="C15" style="--wc:#e5a000">
+  <header>
+    <span class="cid">C15</span>
+    <h3>List stutters while scrolling</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C15"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The vitals list stutters when scrolling fast.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Scroll the list quickly up and down.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode CPU gauge</span><span class="tool">Instruments: Time Profiler / Animation Hitches</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L15_RowCost.swift</span><span class="file">CaseViews/W3_Hangs.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Check the CPU gauge while scrolling.</p></details><details class="hint"><summary>Hint 2</summary><p>Profile it. What function is called for every row?</p></details><details class="hint"><summary>Hint 3</summary><p>Each row does a lot of work while the view is drawn.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>RowCost.label</code> runs a 200,000-step loop for every row, on the main thread, inside <code>body</code>.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Time Profiler: <code>RowCost.label</code> dominates the main thread while scrolling.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// Compute once, off the main thread, and keep body cheap.
+@State private var labels: [Int: String] = [:]
+
+.task {
+    labels = await Task.detached {
+        Dictionary(uniqueKeysWithValues: (0..&lt;300).map { ($0, RowCost.label($0)) })
+    }.value
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li><code>body</code> must be cheap.</li><li>Profile scrolling on the oldest phone.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Hitches came from heavy work inside body for each row. Time Profiler showed it. I precomputed off main.</p></div>
+  </details>
+</article>
+<article class="case" id="C16" style="--wc:#e5a000">
+  <header>
+    <span class="cid">C16</span>
+    <h3>Expanded rows close by themselves</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C16"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Rows that a nurse expands close again after one second.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Patient 2 to expand. Watch for a second.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool"><code>let _ = Self._printChanges()</code> in body</span><span class="tool">Instruments: SwiftUI</span><span class="tool">Breakpoint in the <code>rows</code> property</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">CaseViews/W3_Hangs.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>The clock tick changes every second. What does that re-run?</p></details><details class="hint"><summary>Hint 2</summary><p>Print the ids of the rows on each tick.</p></details><details class="hint"><summary>Hint 3</summary><p>The row ids are random on every render.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>rows</code> creates new rows with <code>UUID()</code> as the id every time <code>body</code> runs. SwiftUI sees brand-new rows, so the <code>@State isOpen</code> resets.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Add <code>let _ = Self._printChanges()</code> to <code>body</code>: it re-runs every second.</li><li>Print <code>rows.map(\.id)</code>: different on every tick.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>private let rows: [RowItem] = (1...5).map { number in
+    RowItem(id: number, title: &quot;Patient \(number)&quot;)   // stable id
+}
+// RowItem.id is now an Int.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Use stable ids.</li><li>Keep model data in state, not rebuilt in body.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Unstable identity. New UUIDs each render made SwiftUI rebuild rows and reset state. Stable ids fixed it.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-network" style="--wc:#2b8be4"><h2>Ward 4: Network <small>4 cases</small></h2>
+<article class="case" id="C17" style="--wc:#2b8be4">
+  <header>
+    <span class="cid">C17</span>
+    <h3>Outage: server flooded by retries</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C17"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> During a server outage, the backend received 10 times more requests than normal.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Set 100 phones. Tap Simulate outage. Read the result.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console (retry_lab)</span><span class="tool">Code reading: PhoneClient</span><span class="tool">Network instrument (idea)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L17_RetryLab.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Compare phones to requests. What is the ratio?</p></details><details class="hint"><summary>Hint 2</summary><p>Read what a phone does after an error.</p></details><details class="hint"><summary>Hint 3</summary><p>Retries are instant, unlimited by wait time, and cover every error.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Each phone retries 10 times immediately for any failure. No wait, no randomness, no stop for hopeless errors.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Result: 100 phones send 1000 requests. Log line <code>retry_lab</code> shows the same.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>static func fetchWithRetry(server: OutageServer) async {
+    for attempt in 1...3 {                                  // small cap
+        if server.call() == 200 { return }
+        let ceiling = min(4.0, 0.5 * pow(2.0, Double(attempt - 1)))
+        let wait = Double.random(in: 0...ceiling)           // backoff + jitter
+        try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+    }
+}
+// Retry only timeouts and 5xx. Never retry 4xx. Keep a remote kill switch.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Backoff with jitter. Max attempts.</li><li>A flag to turn retries off.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A retry storm. I capped attempts, added exponential backoff with jitter, retried only transient errors, and kept a kill switch.</p></div>
+  </details>
+</article>
+<article class="case" id="C18" style="--wc:#2b8be4">
+  <header>
+    <span class="cid">C18</span>
+    <h3>Patient got two refill orders</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C18"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A patient received two refills after one nervous double tap.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Order refill twice quickly. Read the message.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console (order_submit, order_created)</span><span class="tool">Breakpoint in submit</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L18_Orders.swift</span><span class="file">CaseViews/W4_Network.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Count <code>order_submit</code> and <code>order_created</code> lines.</p></details><details class="hint"><summary>Hint 2</summary><p>Is anything stopping the second tap?</p></details><details class="hint"><summary>Hint 3</summary><p>The server cannot tell a retry from a new order.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The button is never disabled. There is no idempotency key. The server creates one order for every request.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: two <code>order_submit</code>, then <code>order_created</code> order=1 and order=2.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// App: disable the button while sending, and send ONE key per order.
+var request = URLRequest(url: url)
+request.httpMethod = &quot;POST&quot;
+request.setValue(orderID.uuidString, forHTTPHeaderField: &quot;Idempotency-Key&quot;)
+
+// Server: if the key was seen, return the first result.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Idempotency key on every request that creates something.</li><li>Disable buttons while a request runs.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Duplicate orders: no idempotency key. Same key on every retry, server dedupes, button disabled while sending.</p></div>
+  </details>
+</article>
+<article class="case" id="C19" style="--wc:#2b8be4">
+  <header>
+    <span class="cid">C19</span>
+    <h3>Users logged out at random</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C19"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Users are logged out randomly after the app wakes up.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Fire 5 API calls at once. Read the result and the Console.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console (got_401, refresh_ok, refresh_failed_logged_out)</span><span class="tool">Timeline reading</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L19_Auth.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Filter the Console for <code>refresh</code>. Count the lines.</p></details><details class="hint"><summary>Hint 2</summary><p>How many refresh calls happen for 5 failed requests?</p></details><details class="hint"><summary>Hint 3</summary><p>The server rotates the refresh token on every use.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Five calls get 401 at the same time. Each one refreshes the token on its own.</li><li>The refresh token works once. The first refresh wins. The other four fail and the client logs the user out.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: five <code>got_401</code>, one <code>refresh_ok</code>, four <code>refresh_failed_logged_out</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>actor TokenRefresher {
+    private var inFlight: Task&lt;Tokens, Error&gt;?
+
+    func refresh() async throws -&gt; Tokens {
+        if let running = inFlight {
+            return try await running.value        // join the running refresh
+        }
+        let task = Task { try await callRefreshEndpoint() }
+        inFlight = task
+        defer { inFlight = nil }
+        return try await task.value
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Single-flight refresh.</li><li>Log request IDs and timing.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Many 401s caused many refreshes with a rotating token. I made refresh single-flight with an actor so all callers share one refresh.</p></div>
+  </details>
+</article>
+<article class="case" id="C20" style="--wc:#2b8be4">
+  <header>
+    <span class="cid">C20</span>
+    <h3>Dashboard shows heart rate 0 after update</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C20"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> After the app update some users see heart rate 0 on the dashboard.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Install cache from old app version. Tap Open dashboard.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Breakpoint in loadHeartRate</span><span class="tool">po / print of the decode error</span><span class="tool">Search code for <code>try?</code></span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L20_VitalsCache.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>No crash and no log. Where can an error disappear?</p></details><details class="hint"><summary>Hint 2</summary><p>Step through <code>loadHeartRate</code> with a breakpoint.</p></details><details class="hint"><summary>Hint 3</summary><p>The old file uses another field name and errors are swallowed.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The old file has <code>bpm</code>. The new code expects <code>heartRate</code>.</li><li><code>try?</code> hides the decode error. The code returns 0 silently. The cache has no schema version.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Breakpoint: <code>vitals</code> is nil. Replace <code>try?</code> with <code>try</code> and print the error: keyNotFound(heartRate).</li><li>The file content is <code>{&quot;bpm&quot;:72}</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>static func loadHeartRate() -&gt; Int {
+    guard let data = try? Data(contentsOf: url) else { return 0 }
+    do {
+        return try JSONDecoder().decode(VitalsV2.self, from: data).heartRate
+    } catch {
+        Log.error(.data, &quot;vitals_cache_decode_failed&quot;, [&quot;error&quot;: &quot;\(error)&quot;])
+        try? FileManager.default.removeItem(at: url)   // drop the old-format file
+        return 0
+    }
+}
+// Better: store a schemaVersion in the file name or content.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Never swallow errors with <code>try?</code> without a log.</li><li>Version your cache.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Silent wrong data: try? hid a decode error from an old cache file. I logged the error, dropped old files, and versioned the cache.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-data" style="--wc:#12a594"><h2>Ward 5: Data, time, location <small>3 cases</small></h2>
+<article class="case" id="C21" style="--wc:#12a594">
+  <header>
+    <span class="cid">C21</span>
+    <h3>Nurse note vanishes after app ends</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C21"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A nurse&#x27;s note disappeared after the app ended during a save.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Type a note. Tap Save note, mid-write end. Run again. Tap Load note.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console (note_save_start without note_save_end)</span><span class="tool">Devices and Simulators &gt; Download Container</span><span class="tool">Breakpoint in load()</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L21_NotesStore.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Compare <code>note_save_start</code> and <code>note_save_end</code> in the log.</p></details><details class="hint"><summary>Hint 2</summary><p>Download the container and open Documents/note.json.</p></details><details class="hint"><summary>Hint 3</summary><p>The file was written in two parts, not in one safe step.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The file is written in a way that is not atomic. The app ended after half the data was on disk.</li><li>Half a JSON file cannot be decoded. <code>load()</code> returns nil, so the note looks lost.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: <code>note_save_start</code> with no <code>note_save_end</code>.</li><li>note.json in the container is cut in the middle.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>let data = try JSONEncoder().encode(note)
+try data.write(to: url, options: [.atomic])     // all or nothing
+// Keep the last good file as a backup and log decode errors on load.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Write atomically.</li><li>Log load failures.</li><li>Test by ending the app during save.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Half-written file after the app ended. Atomic writes make it all or nothing. I also keep a backup and log load errors.</p></div>
+  </details>
+</article>
+<article class="case" id="C22" style="--wc:#12a594">
+  <header>
+    <span class="cid">C22</span>
+    <h3>Negative minutes around the clock change</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C22"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A New York hospital sees &#x27;-30 min&#x27; between readings on 1 November.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Show time between readings.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Print the parsed dates</span><span class="tool">Reasoning about time zones</span><span class="tool">Playground / breakpoint</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L22_DstTimeline.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Print the real dates (with time zone) for each text.</p></details><details class="hint"><summary>Hint 2</summary><p>On 1 November 2026 the clocks in New York go back one hour at 2:00.</p></details><details class="hint"><summary>Hint 3</summary><p>Local time text without an offset is ambiguous.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Readings are saved as local time text. The hour from 1:00 to 2:00 happens twice that night.</li><li>&#x27;01:20&#x27; can mean two different moments. The app picks one and the order breaks.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Report shows 01:50 -&gt; 01:20 as -30 min. The real gap is +30 min.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// Store UTC (ISO 8601 with offset). Show local time only on screen.
+let formatter = ISO8601DateFormatter()
+let saved = formatter.string(from: Date())          // 2026-11-01T05:20:00Z
+let date = formatter.date(from: saved)
+
+// Use a monotonic clock for durations on the device.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Never store local time text.</li><li>Test around DST changes.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Local time strings are ambiguous during the DST fall-back hour. Store UTC with offset, display local.</p></div>
+  </details>
+</article>
+<article class="case" id="C23" style="--wc:#12a594">
+  <header>
+    <span class="cid">C23</span>
+    <h3>Walk distance shows thousands of km</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C23"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A nurse walked about 100 metres. The app says thousands of kilometres.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Calculate distance walked.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Print each GPS fix</span><span class="tool">Breakpoint in totalKm</span><span class="tool">Reasoning: Fresh, Accurate, Frugal</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L23_GpsTrack.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Print each fix: accuracy and age.</p></details><details class="hint"><summary>Hint 2</summary><p>Which point is far away from the others?</p></details><details class="hint"><summary>Hint 3</summary><p>Old, weak and invalid points are used.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>First point is an old saved fix (age 3600 s) from New York. One point has accuracy 800 m. One has accuracy -1 (invalid).</li><li>All are used in the sum.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Print fixes: the first jump is about 13,000 km.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func isUsable(_ fix: GpsFix) -&gt; Bool {
+    return fix.accuracy &gt;= 0              // negative means invalid
+        &amp;&amp; fix.accuracy &lt; 100             // not too weak
+        &amp;&amp; fix.ageSeconds &lt; 10            // not an old saved fix
+}
+
+let good = fixes.filter(isUsable)</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Filter by accuracy and age.</li><li>Reject impossible speeds.</li><li>Test on a real phone outdoors.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Fresh, Accurate, Frugal. I filtered stale, weak and invalid fixes before adding distances.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-concurrency" style="--wc:#8e4ec6"><h2>Ward 6: Threads and queues <small>2 cases</small></h2>
+<article class="case" id="C24" style="--wc:#8e4ec6">
+  <header>
+    <span class="cid">C24</span>
+    <h3>Balance went negative</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C24"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> After two quick purchases the balance is negative.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Buy two tests at once.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Breakpoint inside buy()</span><span class="tool">Console (wallet_lab)</span><span class="tool">Reading: where is the await?</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L24_Wallet.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Both purchases returned true. Why?</p></details><details class="hint"><summary>Hint 2</summary><p>Look for an <code>await</code> between the check and the change.</p></details><details class="hint"><summary>Hint 3</summary><p>Actors are reentrant at every await.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The balance is checked, then the code awaits, then it subtracts.</li><li>While the first call waits, the second one enters the actor and passes the same check.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Result: [true, true], balance -60.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func buy(price: Int) async -&gt; Bool {
+    guard balance &gt;= price else { return false }
+    balance -= price                                 // reserve FIRST
+    let ok = await charge(price)                     // the await is a door
+    if !ok {
+        balance += price                             // undo
+    }
+    return ok
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>After every <code>await</code>, check state again.</li><li>Change state before awaiting.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Actor reentrancy: state changed across an await. I reserved the money first and undid it on failure.</p></div>
+  </details>
+</article>
+<article class="case" id="C25" style="--wc:#8e4ec6">
+  <header>
+    <span class="cid">C25</span>
+    <h3>Uploads stop at scan 3</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C25"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Uploads stop at scan 3. Scans 4 and 5 never upload.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Upload 5 scans. Wait 10 seconds.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode Pause + Debug Navigator</span><span class="tool">Console (upload_failed, upload_ok)</span><span class="tool">Breakpoint in UploadOperation.main</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L25_Uploads.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Read the order of lines in the console.</p></details><details class="hint"><summary>Hint 2</summary><p>The queue runs one operation at a time. What makes an operation &#x27;done&#x27;?</p></details><details class="hint"><summary>Hint 3</summary><p>The failure path returns without finishing.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The queue runs one operation at a time. An async operation must call <code>finish()</code> on every path.</li><li>Scan 3 fails and returns without <code>finish()</code>. The queue waits forever.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: upload_ok 1, upload_ok 2, upload_failed 3, then nothing.</li><li>Debugger: operation 3 <code>isFinished</code> is false.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>DispatchQueue.global().asyncAfter(deadline: .now() + 0.4) {
+    defer {
+        self.finish()                 // runs on EVERY path
+    }
+    if self.index == 3 {
+        self.onResult(self.index, false)
+        return
+    }
+    self.onResult(self.index, true)
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>LOCF: Limit, Order, Cancel, Finish.</li><li>Use <code>defer { finish() }</code>.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>A serial queue stalls if one async operation never finishes. I used defer so finish runs on every path.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-bluetooth" style="--wc:#3e63dd"><h2>Ward 7: Bluetooth (fake band) <small>2 cases</small></h2>
+<article class="case" id="C26" style="--wc:#3e63dd">
+  <header>
+    <span class="cid">C26</span>
+    <h3>Band found but never connects</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C26"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The heart band is found but never connects. No error is shown.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Connect to heart band. Wait 10 seconds.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console filter: ble</span><span class="tool">Breakpoint in didConnect (never hit)</span><span class="tool">Debug Memory Graph (is the peripheral alive?)</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L26_FakeBLE.swift</span><span class="file">Logic/L26_BleClients.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Filter the Console for <code>ble</code>. What step is missing?</p></details><details class="hint"><summary>Hint 2</summary><p>Who keeps a strong reference to the peripheral?</p></details><details class="hint"><summary>Hint 3</summary><p>Core Bluetooth keeps peripherals weakly. The app must keep them.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The client calls connect(peripheral) but stores the peripheral nowhere. The central holds it weakly, so it is freed.</li><li>The connection is dropped silently. There is no timeout, so the screen waits forever.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: <code>ble_connect_start</code>, then nothing. No <code>ble_connected</code>.</li><li>Breakpoint in <code>central(didConnect:)</code> is never reached.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>private var band: FakePeripheral?                    // strong reference
+
+func central(didDiscover peripheral: FakePeripheral) {
+    band = peripheral
+    central.connect(peripheral)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+        guard let self, self.band?.isConnected != true else { return }
+        self.onStatus?(&quot;Could not connect. Try again.&quot;)     // own timeout
+    }
+}</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Keep the peripheral in a strong property.</li><li>Add your own connect timeout.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Connect never finished: the peripheral was not retained and connect has no timeout. I stored it and added my own timer.</p></div>
+  </details>
+</article>
+<article class="case" id="C27" style="--wc:#3e63dd">
+  <header>
+    <span class="cid">C27</span>
+    <h3>Heart rate frozen but &#x27;Connected&#x27;</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C27"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The heart rate on screen froze at one number while the status still says Connected.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Connect. Watch for 20 seconds. The fake band drops the link at 6 seconds.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console filter: ble</span><span class="tool">Breakpoint in didConnect</span><span class="tool">Reading: what resets on disconnect?</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L26_BleClients.swift</span><span class="file">Logic/L26_FakeBLE.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Find <code>ble_link_lost</code> and what follows it.</p></details><details class="hint"><summary>Hint 2</summary><p>After reconnect, do notifications come back? Look for <code>ble_subscribe</code>.</p></details><details class="hint"><summary>Hint 3</summary><p>Subscriptions reset when the link drops. The app subscribes only once.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The link is lost and the band forgets the subscription.</li><li>The app reconnects but subscribes only the first time. No new readings arrive. The screen keeps showing the old number as if it were live.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Log: one <code>ble_subscribe</code>, then <code>ble_link_lost</code>, then <code>ble_connected</code> and no second <code>ble_subscribe</code>.</li><li>Screen shows the same bpm while status says Connected.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func central(didConnect peripheral: FakePeripheral) {
+    onStatus?(&quot;Connected&quot;)
+    peripheral.subscribeToHeartRate()          // EVERY connect, not only the first
+}
+
+// UI: keep a timestamp for each reading.
+// If it is older than 5 seconds: grey it out and show &#x27;NO SIGNAL&#x27;.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Subscribe again after every reconnect.</li><li>Never show an old reading as live.</li><li>Alarm on no signal.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>After reconnect the subscription was gone. I subscribed on every connect and added a freshness label so old readings cannot look live.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-ui" style="--wc:#d6409f"><h2>Ward 8: Accessibility and language <small>2 cases</small></h2>
+<article class="case" id="C28" style="--wc:#d6409f">
+  <header>
+    <span class="cid">C28</span>
+    <h3>Accessibility audit fails</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C28"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A hospital accessibility audit failed on the dose card.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Pick the biggest text size. Run Xcode &gt; Open Developer Tool &gt; Accessibility Inspector &gt; Audit on the Simulator. Turn on VoiceOver.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Accessibility Inspector &gt; Audit</span><span class="tool">VoiceOver</span><span class="tool">Dynamic Type size picker in the case</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">CaseViews/W8_UI.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Run the Audit and read every warning.</p></details><details class="hint"><summary>Hint 2</summary><p>Increase the text size. What gets cut off?</p></details><details class="hint"><summary>Hint 3</summary><p>Unlabeled buttons, a fixed height, status shown only by color, small touch targets.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Two buttons have no label (VoiceOver says only &#x27;button&#x27;).</li><li>The text has a fixed height, so it is clipped at big sizes.</li><li>Status is shown only by a red dot.</li><li>Touch targets are 28 pt (minimum is 44).</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Audit lists: element has no description, hit area too small, text clipped.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>Button {
+    decreaseDose()
+} label: {
+    Image(systemName: &quot;minus.circle&quot;)
+        .frame(minWidth: 44, minHeight: 44)
+}
+.accessibilityLabel(&quot;Decrease dose&quot;)
+
+Text(&quot;Give 5000 units every 8 hours.&quot;)
+    .fixedSize(horizontal: false, vertical: true)   // no fixed height
+
+Label(&quot;Needs review&quot;, systemImage: &quot;exclamationmark.circle&quot;)   // icon + text, not color only</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Run the Audit in review.</li><li>Test with the biggest text and VoiceOver.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Label, Order, Text size, Size of touch, Motion. I fixed labels, removed fixed heights, added text with the color, and made targets 44 pt.</p></div>
+  </details>
+</article>
+<article class="case" id="C29" style="--wc:#d6409f">
+  <header>
+    <span class="cid">C29</span>
+    <h3>Wrong arrows and raw keys in Arabic</h3>
+    <span class="sev low">LOW</span>
+    <label class="done"><input type="checkbox" data-case="C29"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Arabic and Hebrew testers say arrows point the wrong way and some text looks like a code.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Switch on Right-to-left layout. Set Readings to 1.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Edit Scheme &gt; Run &gt; Options &gt; App Language: Right to Left Pseudolanguage and Double-Length Pseudolanguage</span><span class="tool">Xcode Previews</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">CaseViews/W8_UI.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Switch the layout direction and compare.</p></details><details class="hint"><summary>Hint 2</summary><p>Which symbol does not flip? Which text is not translated?</p></details><details class="hint"><summary>Hint 3</summary><p>Hard-coded left arrow, missing string key, no plural rule, fixed date format.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li><code>chevron.left</code> is hard-coded and does not flip.</li><li><code>vitals.title</code> has no entry in a strings file, so the key shows.</li><li>&#x27;1 readings&#x27; has no plural rule.</li><li>The date format is fixed to US style.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>In right-to-left mode the arrow still points left. The key text appears on screen.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>Image(systemName: &quot;chevron.backward&quot;)                 // flips with the language
+
+Text(&quot;vitals.title&quot;)                                   // add this key to Localizable.xcstrings
+Text(&quot;readings_today \(count)&quot;)                        // plural variations in the String Catalog
+
+Text(Date(), format: .dateTime.day().month().year())   // follows the user&#x27;s region</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Use leading and trailing, never left and right.</li><li>String Catalog with plurals.</li><li>Test with pseudolanguages.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>I tested with the right-to-left and double-length pseudolanguages. I used backward chevrons, string catalog plurals, and locale-aware dates.</p></div>
+  </details>
+</article></section><section class="ward" id="ward-release" style="--wc:#30a46c"><h2>Ward 9: Release and tools (real phone) <small>4 cases</small></h2>
+<article class="case" id="C30" style="--wc:#30a46c">
+  <header>
+    <span class="cid">C30</span>
+    <h3>Crash log with only hex addresses</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C30"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> A TestFlight crash shows only hex addresses. Nobody can read it.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Use a real device. Product &gt; Archive (Release). Install it. Tap Crash for symbolication practice. Get the crash log: Xcode &gt; Window &gt; Devices and Simulators &gt; View Device Logs.</li><li>Then match the UUID and symbolicate.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Window &gt; Devices and Simulators &gt; View Device Logs</span><span class="tool">dwarfdump --uuid</span><span class="tool">atos</span><span class="tool">Xcode Organizer &gt; Crashes</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L30_SymbolPractice.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Find the &#x27;Binary Images&#x27; section in the log. Note the UUID of your app.</p></details><details class="hint"><summary>Hint 2</summary><p>Run <code>dwarfdump --uuid TriageLab.app.dSYM</code>. Do the UUIDs match? A different build has a different UUID.</p></details><details class="hint"><summary>Hint 3</summary><p>Use <code>atos -o &lt;dSYM binary&gt; -arch arm64 -l &lt;load address&gt; &lt;crash address&gt;</code> to turn an address into a function name.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>Without the dSYM for that exact build, addresses cannot be turned into names.</li><li>The crash is <code>values[5]</code> on an empty array, three functions deep.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li><code>atos</code> prints <code>SymbolPractice.readLastValue(_:)</code> and the line, then <code>buildSection</code> and <code>startReport</code>.</li><li>Organizer shows the same stack, readable, if the dSYM is available.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code># In CI after every release archive:
+# 1. keep the .xcarchive (it holds the dSYMs)
+# 2. check the UUIDs
+dwarfdump --uuid TriageLab.app.dSYM
+
+# 3. upload the dSYM to your crash tool
+# 4. fail the build if the upload fails</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Upload the dSYM for every build in CI.</li><li>Keep the archive for every build number.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Missing dSYM means hex stacks. I match UUIDs with dwarfdump, symbolicate with atos, and automate the upload in CI.</p></div>
+  </details>
+</article>
+<article class="case" id="C31" style="--wc:#30a46c">
+  <header>
+    <span class="cid">C31</span>
+    <h3>Silent kill on an iPhone 11</h3>
+    <span class="sev critical">CRITICAL</span>
+    <label class="done"><input type="checkbox" data-case="C31"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> Nurses say the app closes while scanning on an iPhone 11. The crash dashboard is empty.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Use a real iPhone. Tap Allocate 50 MB again and again. Watch Memory left fall. iOS closes the app.</li><li>Reopen the app. Open Black Box.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Black Box: last-run report</span><span class="tool">Console (silent_end_suspected)</span><span class="tool">Xcode Organizer &gt; Terminations</span><span class="tool">Debug &gt; Simulate MetricKit Payloads</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">BlackBox/RunTracker.swift</span><span class="file">BlackBox/Memory.swift</span><span class="file">App/AppBootstrap.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>There is no crash report. Open Black Box after the app returns.</p></details><details class="hint"><summary>Hint 2</summary><p>Read the last memory used and memory left values.</p></details><details class="hint"><summary>Hint 3</summary><p>iOS closes apps that go over their memory limit.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The app grew until iOS closed it (memory limit). iOS gives no crash report for that.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Black Box: <code>unknown_in_foreground</code>, last screen C31, last memory left close to 0.</li><li>Log: <code>silent_end_suspected</code>.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>// Detection (already in this app):
+// 1. save heartbeat values every few seconds
+// 2. on next launch compare: clean exit? updated? reboot? background?
+// 3. otherwise: unknown_in_foreground  = hidden crash
+
+// Fix the cause: use less memory (thumbnails, caches with limits).</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Count <code>unknown_in_foreground</code> per version.</li><li>Watch Organizer Terminations.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>No crash report means iOS closed it. My last-run log showed a foreground end with almost no memory left, which proved a memory kill.</p></div>
+  </details>
+</article>
+<article class="case" id="C32" style="--wc:#30a46c">
+  <header>
+    <span class="cid">C32</span>
+    <h3>Nightly sync is &#x27;scheduled&#x27; but never runs</h3>
+    <span class="sev medium">MEDIUM</span>
+    <label class="done"><input type="checkbox" data-case="C32"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> The log says the nightly sync was scheduled. It never runs.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Use a real iPhone. Tap Schedule nightly sync. Read the log. Then find out why nothing runs.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Console</span><span class="tool">Info.plist (BGTaskSchedulerPermittedIdentifiers)</span><span class="tool">Breakpoint on the submit line</span><span class="tool">Debug: simulate a background task launch</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">CaseViews/W9_Release.swift (NightlySync)</span><span class="file">Info.plist</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Remove the <code>try?</code> from the submit line and print the error.</p></details><details class="hint"><summary>Hint 2</summary><p>Compare the identifier in code with the one in Info.plist.</p></details><details class="hint"><summary>Hint 3</summary><p>The identifiers differ by a few letters. The error was hidden.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>The code uses <code>.nightly</code>. Info.plist allows <code>.nightly-sync</code>. The system refuses the request.</li><li><code>try?</code> hides the error, so the log still says &#x27;scheduled&#x27;.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Replace <code>try?</code> with <code>do/catch</code>: error BGTaskSchedulerErrorDomain, not permitted. (On the Simulator the error is &#x27;unavailable&#x27;. Background tasks are not supported there.)</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>do {
+    try BGTaskScheduler.shared.submit(request)
+    Log.info(.background, &quot;nightly_sync_scheduled&quot;)
+} catch {
+    Log.error(.background, &quot;nightly_sync_schedule_failed&quot;, [&quot;error&quot;: &quot;\(error)&quot;])
+}
+// Make the identifier in code match Info.plist exactly.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Never hide scheduling errors.</li><li>Log scheduled, started, time-up, finished.</li><li>Always add catch-up sync on app open.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>try? hid a notPermitted error. The identifier in code did not match Info.plist. I logged the error and fixed the identifier.</p></div>
+  </details>
+</article>
+<article class="case" id="C33" style="--wc:#30a46c">
+  <header>
+    <span class="cid">C33</span>
+    <h3>Battery drain and a warm phone</h3>
+    <span class="sev high">HIGH</span>
+    <label class="done"><input type="checkbox" data-case="C33"> solved</label>
+  </header>
+  <div class="report"><b>Field report:</b> After using fall detection the battery drains fast and the phone gets warm.</div>
+  <div class="grid">
+    <section>
+      <h4>1. Reproduce</h4>
+      <ol><li>Tap Start fall-detection sensor. Leave the screen. Watch the CPU and Disk gauges in Xcode for one minute.</li></ol>
+      <h4>2. Tools to try</h4>
+      <div class="tools"><span class="tool">Xcode CPU, Disk and Energy gauges</span><span class="tool">Instruments: Time Profiler, File Activity, Energy Log</span><span class="tool">Console</span></div>
+      <h4>3. Files</h4>
+      <div class="tools"><span class="file">Logic/L33_SensorPoller.swift</span></div>
+    </section>
+    <section>
+      <h4>Stuck? Open one hint at a time</h4>
+      <details class="hint"><summary>Hint 1</summary><p>Look at the CPU and Disk gauges after you leave the screen. Do they go down?</p></details><details class="hint"><summary>Hint 2</summary><p>Profile it. What runs 100 times a second?</p></details><details class="hint"><summary>Hint 3</summary><p>A fast timer writes to a file every time and nothing stops it.</p></details>
+    </section>
+  </div>
+  <details class="answer">
+    <summary>Show the answer (try first!)</summary>
+    <div class="ans cause"><h5>Root cause</h5><ul class=""><li>A timer runs every 10 ms (100 times a second). Each tick opens a file and writes one line.</li><li>Nothing stops it when you leave the screen.</li></ul></div>
+    <div class="ans confirm"><h5>How to PROVE it (what you should see)</h5><ul class=""><li>Time Profiler: <code>poll()</code> and file I/O. File Activity: constant writes. CPU never drops.</li></ul></div>
+    <div class="ans fix"><h5>Fix</h5><pre><code>func start() {
+    // 10 times a second is enough, and batch the writes.
+    timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+        self?.collect()
+    }
+}
+
+func stop() {
+    timer?.invalidate()
+    timer = nil
+    flushBufferToDisk()
+}
+// Write in batches. Call stop() when the feature is not needed.</code></pre></div>
+    <div class="ans prevent"><h5>Prevent it next time</h5><ul class=""><li>Lowest rate that works.</li><li>Batch disk writes.</li><li>Stop work when the screen is gone.</li></ul></div>
+    <div class="ans say"><h5>One-line summary</h5><p>Battery drain: a 100 Hz timer writing to disk and never stopping. I lowered the rate, batched writes, and stopped it when not needed.</p></div>
+  </details>
+</article></section>
+
+<div class="card"><h2 style="--wc:#e5484d">What is NOT in this lab</h2>
+<ul><li><b>Locked phone before first unlock</b> (Data Protection crash): needs a real phone restart. Test it by hand: restart, do not unlock, trigger a background launch.</li>
+<li><b>Real Bluetooth hardware, real GPS</b>: the lab uses a fake band and fixed GPS points. The bugs and fixes are the same.</li>
+<li><b>Certificate expiry, App Store release steps</b>: process topics. See docs/triage-method.md.</li></ul></div>
+</main>
+<script>
+const KEY = "triagelab.solved";
+let solved = {};
+try { solved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { solved = {}; }
+function refresh() {
+  let n = 0;
+  document.querySelectorAll("input[data-case]").forEach(box => {
+    const id = box.dataset.case;
+    box.checked = !!solved[id];
+    if (box.checked) n++;
+    const chip = document.querySelector('.chip[href="#' + id + '"]');
+    if (chip) chip.classList.toggle("solved", box.checked);
+  });
+  document.getElementById("count").textContent = n;
+}
+document.querySelectorAll("input[data-case]").forEach(box => {
+  box.addEventListener("change", () => {
+    solved[box.dataset.case] = box.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(solved)); } catch (e) {}
+    refresh();
+  });
+});
+refresh();
+</script>
+</body></html>
